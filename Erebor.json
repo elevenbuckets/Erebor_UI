@@ -1,0 +1,11 @@
+{
+   "appName": "Erebor",
+   "artifactDir": "/home/jasonlin/Proj/ETH/11BE",
+   "conditionDir": "/home/jasonlin/Proj/ETH/11BE",
+   "contracts": [],
+   "account": "0xf053b7f56beffbf660bbf81a7fd98880f1f550e7",
+   "networkID": 4,
+   "version": "1.0",
+   "defaultGasPrice": "11830000000",
+   "GUI": "/home/jasonlin/Proj/ETH/11BE/Release/11BE/dapps/Erebor/UI/main.js" 
+}
