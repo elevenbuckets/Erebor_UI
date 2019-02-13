@@ -71,7 +71,8 @@ class Erebor extends BladeIronClient {
 				const spawn = require('child_process').spawn;
 		                let cwd = process.cwd(); 
 		                let topdir = path.join(cwd, 'dapps', this.appName, 'GUI');
-		                let configDir = require(path.join(cwd, '.local', 'bootstrap_config.json')).configDir;
+						let configDir = require(path.join(cwd, '.local', 'bootstrap_config.json')).configDir;
+						console.log(path.join(topdir,'node_modules','.bin','electron'))
 		
 		                const subprocess = spawn(path.join(topdir,'node_modules','.bin','electron'), ['.'], {
 		                  cwd: topdir,
@@ -99,3 +100,4 @@ class Erebor extends BladeIronClient {
 }
 
 module.exports = Erebor;
+

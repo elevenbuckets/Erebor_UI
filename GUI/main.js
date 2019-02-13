@@ -2,8 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const Wallet = require('../Wallet.js');
-const appOpts = require('../Wallet.json');
+const Erebor = require('../Erebor.js');
+const appOpts = require('../Erebor.json');
 const {app, BrowserWindow, ipcMain} = require('electron');
 const url = require('url');
 
@@ -11,7 +11,7 @@ const rpcport = process.env.rpcport || 3000;
 const rpchost = process.env.rpchost || '127.0.0.1';
 const confdir = process.env.configDir;
 console.log(`DEBUG: ${rpcport} ${rpchost}`); console.dir(appOpts);
-const wallet = new Wallet(rpcport, rpchost, appOpts);
+const erebor = new Erebor(rpcport, rpchost, appOpts);
 
 // Temporary solution before UI is migrated...
 const cfgObjs = {};
@@ -23,10 +23,10 @@ let win;
 
 const createWindow = () => {
 	  // Create the browser window.
-	  wallet.connectRPC()
+	  erebor.connectRPC()
 	  .then((rc) => {
 	    	console.log(`DEBUG: connected`);
-		return wallet.init().catch((err) => { console.trace(err); return; }); 
+		return erebor.init().catch((err) => { console.trace(err); return; }); 
 	  })
 	  .then(() => {
 	    win = new BrowserWindow({minWidth: 960, minHeight: 370, resizable: true, icon: path.join(__dirname, 'public', 'assets', 'icon', '11be_logo.png')});
@@ -39,7 +39,7 @@ const createWindow = () => {
 	      slashes: true
 	    }))
 	
-	    global.wallet = wallet;
+	    global.erebor = erebor;
 	
 	    // Open the DevTools.
 	    win.webContents.openDevTools()

@@ -1,10 +1,10 @@
 import Reflux from 'reflux';
 import { createCanvasWithAddress } from "../util/Utils";
-import WalletActions from '../action/WalletActions';
+import EreborActions from '../action/EreborActions';
 import loopasync from 'loopasync';
 import { remote } from 'electron';
 
-class WalletStates extends Reflux.Store {
+class EreborStore extends Reflux.Store {
 	constructor() {
 		super();
 
@@ -31,10 +31,10 @@ class WalletStates extends Reflux.Store {
 				syncInProgress: false
 			}
 
-		this.listenables = WalletActions;
-		this.wallet = remote.getGlobal('wallet');
-		this.wallet.client.subscribe('ethstats');
-		this.setState({ gasPrice: this.wallet.configs.defaultGasPrice }); // does not really work, since CP control gas price
+		this.listenables = EreborActions;
+		this.erebor = remote.getGlobal('erebor');
+		this.erebor.client.subscribe('ethstats');
+		this.setState({ gasPrice: this.erebor.configs.defaultGasPrice }); // does not really work, since CP control gas price
 
 		this.addressUpdate = () => {
 			if (this.state.lesDelay === true || this.state.address === null) return; // do nothing, since statusUpdate is doing it already
@@ -44,25 +44,25 @@ class WalletStates extends Reflux.Store {
 			this._balances = { 'ETH': 0 };
 			this._tokenBalance = [];
 
-			if (this.wallet.userWallet == this.state.address) {
-				//loopasync(['ETH', ...this.state.tokenList], WalletActions.statusUpdate, 1);
-				['ETH', ...this.state.tokenList].map((t) => { WalletActions.statusUpdate(t); })
+			if (this.erebor.userErebor == this.state.address) {
+				//loopasync(['ETH', ...this.state.tokenList], EreborActions.statusUpdate, 1);
+				['ETH', ...this.state.tokenList].map((t) => { EreborActions.statusUpdate(t); })
 			} else if (typeof (this.state.passManaged[this.state.address]) === 'undefined') {
-				this.wallet.linkAccount(this.state.address)
+				this.erebor.linkAccount(this.state.address)
 					.then((r) => {
 						this.setState({ passManaged: { [this.state.address]: r.result } });
-						//loopasync(['ETH', ...this.state.tokenList], WalletActions.statusUpdate, 1);
-						['ETH', ...this.state.tokenList].map((t) => { WalletActions.statusUpdate(t); })
+						//loopasync(['ETH', ...this.state.tokenList], EreborActions.statusUpdate, 1);
+						['ETH', ...this.state.tokenList].map((t) => { EreborActions.statusUpdate(t); })
 					})
 					.catch((err) => {
 						console.trace(err);
 						//this.setState({address: null});
-						//WalletActions.finishUpdate();
+						//EreborActions.finishUpdate();
 					})
 			}
 		}
 
-		this.wallet.handleStats = (stats) => {
+		this.erebor.handleStats = (stats) => {
 			if (stats.connected === false) {
 				return this.setState({ connected: false });
 			} else if (stats.blockHeight === 0) {
@@ -73,7 +73,7 @@ class WalletStates extends Reflux.Store {
 				this.setState({ ...stats, wait4peers: false, syncInProgress: false });
 			}
 
-			this.wallet.allAccounts().then((addrs) => {
+			this.erebor.allAccounts().then((addrs) => {
 				if (addrs.length !== this.state.accounts.length) this.setState({ accounts: addrs });
 
 				if (this.state.address !== null) {
@@ -83,27 +83,27 @@ class WalletStates extends Reflux.Store {
 				}
 			});
 
-			this.wallet.gasPriceEst().then((est) => {
+			this.erebor.gasPriceEst().then((est) => {
 				this.setState({ gasPriceInfo: est, gasPrice: est[this.state.gasPriceOption] });
 			})
 		}
 
-		this.wallet.client.on('ethstats', this.wallet.handleStats);
-		this.wallet.client.subscribe("synctokens");
+		this.erebor.client.on('ethstats', this.erebor.handleStats);
+		this.erebor.client.subscribe("synctokens");
 
 		this.syncTokens = () => {
 			console.log(`syncTokenHandler is called`)
-			WalletActions.watchedTokenUpdate();
+			EreborActions.watchedTokenUpdate();
 		}
 
-		this.wallet.client.on('synctokens', this.syncTokens);
+		this.erebor.client.on('synctokens', this.syncTokens);
 
 		this._count;
 		this._target;
 		this.retryTimer;
 
  		// Init
-		this.wallet.handleStats({});
+		this.erebor.handleStats({});
 		this.syncTokens();
 	}
 
@@ -117,7 +117,7 @@ class WalletStates extends Reflux.Store {
 			console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!retrying status update soon...")
 			this.setState({ address: address, lesDelay: true, tokenBalance: [], showingBlock: 0 }); // is this correct ???
 			createCanvasWithAddress(canvas, this.state.address);
-			this.retryTimer = setTimeout(() => { return WalletActions.startUpdate(address, canvas) }, 997);
+			this.retryTimer = setTimeout(() => { return EreborActions.startUpdate(address, canvas) }, 997);
 			return
 		}
 
@@ -131,25 +131,25 @@ class WalletStates extends Reflux.Store {
 		stage = stage.then(() => {
 			this.setState({ address: address, lesDelay: true, tokenBalance: [] });
 			createCanvasWithAddress(canvas, this.state.address);
-			return this.wallet.linkAccount(address); // define app specific 'userWallet' as class attribute if returns 'true'
+			return this.erebor.linkAccount(address); // define app specific 'userErebor' as class attribute if returns 'true'
 		})
 
 		stage = stage.then((r) => {
 			this.setState({ passManaged: { [this.state.address]: r.result } });
-			loopasync(['ETH', ...this.state.tokenList], WalletActions.statusUpdate, 1);
+			loopasync(['ETH', ...this.state.tokenList], EreborActions.statusUpdate, 1);
 		})
 			.catch((err) => {
 				console.trace(err);
 				//this.setState({address: null});
 				//createCanvasWithAddress(canvas, '0x');
-				//WalletActions.finishUpdate();
+				//EreborActions.finishUpdate();
 			})
 	}
 
 	onStatusUpdate(symbol) {
 		if (symbol != 'ETH') {
-			this.wallet.addrTokenBalance(symbol)(this.state.address).then((b) => {
-				let b9 = Number(this.wallet.toEth(b, this.wallet.TokenInfo[symbol].decimals).toFixed(9));
+			this.erebor.addrTokenBalance(symbol)(this.state.address).then((b) => {
+				let b9 = Number(this.erebor.toEth(b, this.erebor.TokenInfo[symbol].decimals).toFixed(9));
 				if (b9 > 0) {
 					let stats = { [symbol]: b9 };
 					let a = [...this._tokenBalance, `${symbol}: ${b9}`];
@@ -157,15 +157,15 @@ class WalletStates extends Reflux.Store {
 					this._tokenBalance = [...new Set(a)];
 				}
 				this._count++;
-				if (this._count == this._target) WalletActions.finishUpdate();
+				if (this._count == this._target) EreborActions.finishUpdate();
 			})
 		} else {
-			this.wallet.addrEtherBalance(this.state.address).then((b) => {
-				let b9 = Number(this.wallet.toEth(b, 18).toFixed(9));
+			this.erebor.addrEtherBalance(this.state.address).then((b) => {
+				let b9 = Number(this.erebor.toEth(b, 18).toFixed(9));
 				let stats = { [symbol]: b9 };
 				this._balances = { ...this._balances, ...stats };
 				this._count++;
-				if (this._count == this._target) WalletActions.finishUpdate();
+				if (this._count == this._target) EreborActions.finishUpdate();
 			})
 		}
 
@@ -182,20 +182,20 @@ class WalletStates extends Reflux.Store {
 	}
 
 	onSend(fromAddr, addr, type, amount) {
-		if (fromAddr !== this.wallet.userWallet) {
+		if (fromAddr !== this.erebor.userErebor) {
 			console.log("no password"); return;
 		}
-		let weiAmount = type === 'ETH' ? this.wallet.toWei(amount, 18).toString() : this.wallet.toWei(amount, this.wallet.TokenInfo[type].decimals).toString();
-		this.wallet.sendTx(type)(addr, weiAmount)
-			.then((qid) => { return this.wallet.getReceipts(qid); })
+		let weiAmount = type === 'ETH' ? this.erebor.toWei(amount, 18).toString() : this.erebor.toWei(amount, this.erebor.TokenInfo[type].decimals).toString();
+		this.erebor.sendTx(type)(addr, weiAmount)
+			.then((qid) => { return this.erebor.getReceipts(qid); })
 			.then((r) => { console.dir(r); })
 			.catch((err) => { console.trace(err); });
 	}
 
 	onWatchedTokenUpdate() {
-		return this.wallet.client.call('hotGroupInfo').then((info) => {
+		return this.erebor.client.call('hotGroupInfo').then((info) => {
 			this.setState({ tokenList: Object.keys(info) })
-			this.wallet.TokenInfo = info;
+			this.erebor.TokenInfo = info;
 			return true;
 		})
 		.then(() => {
@@ -208,4 +208,4 @@ class WalletStates extends Reflux.Store {
 	}
 }
 
-export default WalletStates;
+export default EreborStore;

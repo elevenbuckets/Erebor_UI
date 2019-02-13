@@ -22,37 +22,40 @@ var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
 
-var _os = require('os');
+var _EreborStore = require('../store/EreborStore');
 
-var _os2 = _interopRequireDefault(_os);
+var _EreborStore2 = _interopRequireDefault(_EreborStore);
 
-var _WalletStates = require('../store/WalletStates');
+var _EreborActions = require('../action/EreborActions');
 
-var _WalletStates2 = _interopRequireDefault(_WalletStates);
+var _EreborActions2 = _interopRequireDefault(_EreborActions);
 
-var _WalletActions = require('../action/WalletActions');
+var _SideBarView = require('./SideBarView');
 
-var _WalletActions2 = _interopRequireDefault(_WalletActions);
-
-var _Transfer = require('./Transfer');
-
-var _Transfer2 = _interopRequireDefault(_Transfer);
-
-var _Accounts = require('./Accounts');
-
-var _Accounts2 = _interopRequireDefault(_Accounts);
+var _SideBarView2 = _interopRequireDefault(_SideBarView);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const ipcRenderer = require('electron').ipcRenderer;
+
+// Reflux store
+
+
+// Reflux actions
+
 
 // Views
 
 
-// Reflux store
 class MainView extends _reflux2.default.Component {
 	constructor(props) {
 		super(props);
 
-		this.updateState = (key, e) => {
+		this.updateState = (key, view) => {
+			this.setState({ [key]: view });
+		};
+
+		this.updateStateForEvent = (key, e) => {
 			this.setState({ [key]: e.target.value });
 		};
 
@@ -60,90 +63,49 @@ class MainView extends _reflux2.default.Component {
 			return _reactDom2.default.findDOMNode(this.refs.Accounts).firstChild;
 		};
 
-		this.store = _WalletStates2.default;
+		this.store = _EreborStore2.default;
+		// this.controlPanel = remote.getGlobal("controlPanel");
+		// this.controlPanel.client.subscribe('newJobs');
+		// this.controlPanel.client.on('newJobs', this.handleNewJobs);
+		// this.controlPanel.syncTokenInfo();
+		this.state = {
+			currentView: "AppLauncher"
+		};
+
+		this.storeKeys = ["unlocked", "currentView", "modalIsOpen", "scheduleModalIsOpen", "retrying", "rpcfailed", "configured", "userCfgDone", "syncInProgress", "blockHeight", "highestBlock"];
 	}
 
 	render() {
 		console.log("In MainView render(); syncInProgress = " + this.state.syncInProgress);
 
-		if (this.state.connected === false) {
-			document.body.style.background = "rgb(17, 31, 47)";
-			return _react2.default.createElement(
+		document.body.style.background = "#f4f0fa";
+		return _react2.default.createElement(
+			'div',
+			{ className: 'wrapper' },
+			_react2.default.createElement(_SideBarView2.default, { currentView: this.state.currentView, updateView: this.updateState.bind(this, "currentView") }),
+			_react2.default.createElement(
 				'div',
-				{ className: 'container locked', style: { background: "rgb(17, 31, 47)" } },
+				{ className: 'item version', style: { border: "5px solid #34475c", borderRadius: '0px', borderRight: "1px solid white" } },
 				_react2.default.createElement(
-					'div',
-					{ className: 'item list', style: { background: "none" } },
-					_react2.default.createElement(
-						'div',
-						{ style: { border: "2px solid white", padding: "40px", textAlign: "center" } },
-						_react2.default.createElement('div', { className: 'loader syncpage' }),
-						_react2.default.createElement('br', null),
-						_react2.default.createElement(
-							'p',
-							{ style: { alignSelf: "flex-end", fontSize: "24px", marginTop: "10px" } },
-							'Lost local Ethereum node connection ...'
-						)
-					)
-				)
-			);
-		} else if (this.state.wait4peers === true) {
-			document.body.style.background = "rgb(17, 31, 47)";
-			return _react2.default.createElement(
-				'div',
-				{ className: 'container locked', style: { background: "rgb(17, 31, 47)" } },
+					'p',
+					null,
+					' Platform Ver : '
+				),
 				_react2.default.createElement(
-					'div',
-					{ className: 'item list', style: { background: "none" } },
-					_react2.default.createElement(
-						'div',
-						{ style: { border: "2px solid white", padding: "40px", textAlign: "center" } },
-						_react2.default.createElement('div', { className: 'loader syncpage' }),
-						_react2.default.createElement('br', null),
-						_react2.default.createElement(
-							'p',
-							{ style: { alignSelf: "flex-end", fontSize: "24px", marginTop: "10px" } },
-							'Awaiting incomming blocks from peers ...'
-						)
-					)
+					'p',
+					{ style: { color: "rgba(250,250,250,0.66)" } },
+					' ',
+					this.state.version,
+					' '
 				)
-			);
-		} else if (this.state.syncInProgress === true) {
-			document.body.style.background = "linear-gradient(-180deg, rgb(17, 31, 47), rgb(24, 156, 195))";
-			return _react2.default.createElement(
+			),
+			_react2.default.createElement(
 				'div',
-				{ className: 'container locked', style: { background: "none" } },
-				_react2.default.createElement(
-					'div',
-					{ className: 'item list', style: { background: "none" } },
-					_react2.default.createElement(
-						'div',
-						{ style: { border: "2px solid white", padding: "40px", textAlign: "center" } },
-						_react2.default.createElement('div', { className: 'loader' }),
-						_react2.default.createElement('br', null),
-						_react2.default.createElement(
-							'p',
-							{ style: { alignSelf: "flex-end", fontSize: "24px", marginTop: "10px" } },
-							'Block syncing in progress ',
-							this.state.blockHeight,
-							' / ',
-							this.state.highestBlock,
-							' ...'
-						)
-					)
-				)
-			);
-		} else {
-			document.body.style.background = "rgb(11, 41, 57)";
-			return _react2.default.createElement(
-				'div',
-				{ className: 'item container unlocked' },
-				_react2.default.createElement(_Accounts2.default, { ref: 'Accounts' }),
-				_react2.default.createElement(_Transfer2.default, null)
-			);
-		}
+				{ className: 'content' },
+				'PlaceHolder'
+			)
+		);
 	}
 }
 
-// Reflux actions
 exports.default = MainView;
