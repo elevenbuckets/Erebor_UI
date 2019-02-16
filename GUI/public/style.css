@@ -160,10 +160,25 @@ h6 {
 }
 
 .mining {
+  display: grid;
+  grid-template-columns: 50vw 50vw;
+  grid-template-areas:
+   "miningMessages miningSettings";
  
   color: white;
   font-size: 20pt
  }
+.miningMessages{
+  grid-area: miningMessages;
+  margin: 20px;
+  max-height: 80vh;
+}
+
+.miningSettings{
+  grid-area: miningSettings;
+  margin: 20px;
+  max-height: 60vh;
+}
 
 /* Each item in our grid will contain numbers */
 .item {
