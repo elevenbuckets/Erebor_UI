@@ -30,9 +30,13 @@ var _EreborActions = require('../action/EreborActions');
 
 var _EreborActions2 = _interopRequireDefault(_EreborActions);
 
-var _SideBarView = require('./SideBarView');
+var _HeaderBarView = require('./HeaderBarView');
 
-var _SideBarView2 = _interopRequireDefault(_SideBarView);
+var _HeaderBarView2 = _interopRequireDefault(_HeaderBarView);
+
+var _MiningView = require('./MiningView');
+
+var _MiningView2 = _interopRequireDefault(_MiningView);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -78,31 +82,14 @@ class MainView extends _reflux2.default.Component {
 	render() {
 		console.log("In MainView render(); syncInProgress = " + this.state.syncInProgress);
 
-		document.body.style.background = "#f4f0fa";
 		return _react2.default.createElement(
 			'div',
 			{ className: 'wrapper' },
-			_react2.default.createElement(_SideBarView2.default, { currentView: this.state.currentView, updateView: this.updateState.bind(this, "currentView") }),
-			_react2.default.createElement(
-				'div',
-				{ className: 'item version', style: { border: "5px solid #34475c", borderRadius: '0px', borderRight: "1px solid white" } },
-				_react2.default.createElement(
-					'p',
-					null,
-					' Platform Ver : '
-				),
-				_react2.default.createElement(
-					'p',
-					{ style: { color: "rgba(250,250,250,0.66)" } },
-					' ',
-					this.state.version,
-					' '
-				)
-			),
+			_react2.default.createElement(_HeaderBarView2.default, { currentView: this.state.currentView, updateView: this.updateState.bind(this, "currentView") }),
 			_react2.default.createElement(
 				'div',
 				{ className: 'content' },
-				'PlaceHolder'
+				_react2.default.createElement(_MiningView2.default, null)
 			)
 		);
 	}

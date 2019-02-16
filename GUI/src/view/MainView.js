@@ -15,7 +15,9 @@ import EreborActions from '../action/EreborActions';
 
 
 // Views
-import SideBarView from './SideBarView'
+import HeaderBarView from './HeaderBarView';
+import MiningView from './MiningView';
+
 
 class MainView extends Reflux.Component {
 	constructor(props) {
@@ -62,16 +64,12 @@ class MainView extends Reflux.Component {
 
 	render() {
 		console.log("In MainView render(); syncInProgress = " + this.state.syncInProgress);
-		
-			document.body.style.background = "#f4f0fa";
+
 			return (
 				<div className="wrapper">
-					<SideBarView currentView={this.state.currentView} updateView={this.updateState.bind(this, "currentView")} />
-					<div className="item version" style={{ border: "5px solid #34475c", borderRadius: '0px', borderRight: "1px solid white" }}>
-						<p> Platform Ver : </p><p style={{ color: "rgba(250,250,250,0.66)" }}> {this.state.version} </p>
-					</div>
+					<HeaderBarView currentView={this.state.currentView} updateView={this.updateState.bind(this, "currentView")} />
 					<div className="content">
-						PlaceHolder
+						<MiningView/>
 					</div>
 				</div>
 			)
